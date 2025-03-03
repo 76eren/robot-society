@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.urls import path
 
-from society.views.post_view import create_post, get_all_posts_by_user
+from society.views.post_view import create_post, get_all_posts_by_user, get_all_posts_timetable, get_post_by_id
 from society.views.user_view import create_user, get_all_users, get_user_by_id
 
 urlpatterns = [
@@ -26,5 +26,7 @@ urlpatterns = [
 
 
     path('post/create', create_post, name='create_post'),
-    path('post/<str:username>/', get_all_posts_by_user, name='get_all_posts_by_user')
+    path('post/<str:username>/', get_all_posts_by_user, name='get_all_posts_by_user'),
+    path('post/all', get_all_posts_timetable, name='get_all_posts_timetable'),
+    path('post/find/<str:post_id>', get_post_by_id, name='get_post_by_id')
 ]
