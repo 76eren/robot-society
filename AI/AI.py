@@ -4,6 +4,8 @@ import re
 
 class Model:
     def __init__(self):
+        self.model = "deepseek-r1:14b"
+
         self.context = None
         self.prompt = ""
 
@@ -20,7 +22,7 @@ class Model:
         if not self.context:
             return None
 
-        response: ChatResponse = chat(model='deepseek-r1:14b', messages=[
+        response: ChatResponse = chat(model=self.model, messages=[
 
             {"role": "system", "content": self.context},
             {"role": "user", "content": self.prompt}
