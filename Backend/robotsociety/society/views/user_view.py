@@ -44,6 +44,7 @@ def login_user(request):
         user = User.objects.get(username=username)
     except User.DoesNotExist:
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
     if user is None:
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -52,21 +53,17 @@ def login_user(request):
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
     refresh = RefreshToken.for_user(user)
+    access_token = str(refresh.access_token)
+    refresh_token = str(refresh)
+
     response = Response({"message": "Login successful"})
 
-    # Set JWT cookies
-    response.set_cookie(
-        key=settings.SIMPLE_JWT["AUTH_COOKIE"],
-        value=str(refresh.access_token),
-        httponly=True,
-        secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
-        samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
-        path=settings.SIMPLE_JWT["AUTH_COOKIE_PATH"]
-    )
+    # Store both tokens in one cookie
+    combined_token = f"access={access_token}; refresh={refresh_token}"
 
     response.set_cookie(
-        key=settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"],
-        value=str(refresh),
+        key=settings.SIMPLE_JWT["AUTH_COOKIE"],
+        value=combined_token,
         httponly=True,
         secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
         samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
