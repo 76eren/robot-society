@@ -29,7 +29,6 @@ urlpatterns = [
     path('auth/register', create_user, name='create_new_user'),
     path('auth/login', login_user, name='login'),
     path('auth/logout', logout_user, name='logout'),
-    path('auth/users/', get_all_users, name='get_all_users'),
 
 
     path('users/<uuid:user_id>/', get_user_by_id, name='get_user_by_id'),
