@@ -1,6 +1,7 @@
 import uuid
 
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from society.models import Post, User
@@ -10,14 +11,22 @@ from dateutil.parser import parse
 DATE_FORMAT = "%d-%m-%y %H:%M:%S"
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_post(request):
     serializer = PostSerializer(data=request.data)
 
     if serializer.is_valid():
-        post = serializer.save()
-        return Response({'message': 'Post created successfully', 'post_id': str(post.id)}, status=201)
+        user = request.user
 
-    return Response(serializer.errors, status=400)
+        content = serializer.validated_data.get('content')
+        parent = serializer.validated_data.get('parent')
+        created_at = serializer.validated_data.get('created_at')
+
+        post = Post.objects.create(user=user, content=content, parent=parent, created_at=created_at)
+
+        post.save()
+
+        return Response({'message': 'Post created successfully'}, status=201)
 
 
 
