@@ -140,18 +140,21 @@ REST_FRAMEWORK = {
     ),
 }
 
-
+JWT_SECRET = os.getenv('JWT_SECRET')
 SIMPLE_JWT = {
+    "SIGNING_KEY": JWT_SECRET,
+    "ALGORITHM": "HS256",
+
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_COOKIE": "access_token",
     "AUTH_COOKIE_REFRESH": "refresh_token",
-    "AUTH_COOKIE_SECURE": False,
+    "AUTH_COOKIE_SECURE": True,
     "AUTH_COOKIE_HTTP_ONLY": True,
     "AUTH_COOKIE_PATH": "/",
-    "AUTH_COOKIE_SAMESITE": "None",
+    "AUTH_COOKIE_SAMESITE": "Lax",
 }
 
 AUTH_USER_MODEL = 'society.User'

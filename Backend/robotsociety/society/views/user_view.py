@@ -7,9 +7,11 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from robotsociety.authentication import CookieJWTAuthentication
 from ..models import User
 from ..serializers import UserSerializer
 
+# TODO: Move auth related stuff to a diff view
 
 @api_view(['POST'])
 def create_user(request):
@@ -63,7 +65,7 @@ def login_user(request):
 
     response.set_cookie(
         key=settings.SIMPLE_JWT["AUTH_COOKIE"],
-        value=combined_token,
+        value=CookieJWTAuthentication.encrypt(combined_token),
         httponly=True,
         secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
         samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],

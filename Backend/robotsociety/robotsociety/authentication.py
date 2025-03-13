@@ -1,12 +1,10 @@
-
-import logging
-
-logger = logging.getLogger(__name__)
-
+from django.conf import settings
 from rest_framework_simplejwt.authentication import JWTAuthentication
 import re
-
+import os
+from cryptography.fernet import Fernet
 class CookieJWTAuthentication(JWTAuthentication):
+
 
     def authenticate(self, request):
         header = self.get_header(request)
@@ -21,7 +19,7 @@ class CookieJWTAuthentication(JWTAuthentication):
             cookie_header = request.headers.get('Cookie')
             if cookie_header:
 
-                cookie_header = cookie_header.replace(r"\073", ";")
+                cookie_header = CookieJWTAuthentication.decrypt(cookie_header).replace(r"\073", ";")
 
                 match = re.search(r'access=([^;]+); refresh=([^;]+)', cookie_header)
 
@@ -41,7 +39,23 @@ class CookieJWTAuthentication(JWTAuthentication):
         try:
             validated_token = self.get_validated_token(raw_access_token)
         except Exception as e:
-            logger.error(f"Access token validation failed: {e}")
             return None
 
         return self.get_user(validated_token), validated_token
+
+    @staticmethod
+    def encrypt(value: str):
+        encryption_key = os.environ.get('ENCRYPTION_PASSWORD')
+        fernet = Fernet(encryption_key)
+        return fernet.encrypt(value.encode()).decode()
+
+    @staticmethod
+    def decrypt(value: str):
+        cookie_key = settings.SIMPLE_JWT["AUTH_COOKIE"]
+        value = value.replace(f"{cookie_key}=", "")
+
+        encryption_key = os.environ.get('ENCRYPTION_PASSWORD')
+        fernet = Fernet(encryption_key)
+        decrypted = fernet.decrypt(value.encode()).decode()
+        decrypted = f"{cookie_key}={decrypted}"
+        return decrypted
