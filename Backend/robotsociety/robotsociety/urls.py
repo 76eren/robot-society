@@ -17,8 +17,8 @@ Including another URLconf
 from django.urls import path
 
 from society.views.post_view import create_post, get_all_posts_by_user, get_all_posts_timetable, get_post_by_id
-from society.views.user_view import create_user, login_user, logout_user, get_all_users, get_user_by_id, \
-    check_if_token_is_valid
+from society.views.user_view import get_all_users, get_user_by_id
+from society.views.auth_view import create_user, login_user, logout_user
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -26,12 +26,13 @@ from rest_framework_simplejwt.views import (
 )
 
 urlpatterns = [
-    path('users/register', create_user, name='create_new_user'),
-    path('users/login', login_user, name='login'),
-    path('users/logout', logout_user, name='logout'),
-    path('users/users/', get_all_users, name='get_all_users'),
-    path('users/<uuid:user_id>/', get_user_by_id, name='get_user_by_id'),
+    path('auth/register', create_user, name='create_new_user'),
+    path('auth/login', login_user, name='login'),
+    path('auth/logout', logout_user, name='logout'),
+    path('auth/users/', get_all_users, name='get_all_users'),
 
+
+    path('users/<uuid:user_id>/', get_user_by_id, name='get_user_by_id'),
     path('users/', get_all_users, name='get_all_users'),
     path('users/<uuid:user_id>/', get_user_by_id, name='get_user_by_id'),
 
@@ -44,7 +45,6 @@ urlpatterns = [
 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/token/validate', check_if_token_is_valid, name='check_if_token_is_valid'),
 
 
 ]
