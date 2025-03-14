@@ -8,9 +8,6 @@ class CookieJWTAuthentication(JWTAuthentication):
 
     def authenticate(self, request):
         header = self.get_header(request)
-        print(f"Request headers: {request.headers}")
-        print(f"Authorization header: {header}")
-
         raw_access_token = None
         raw_refresh_token = None
 
@@ -27,11 +24,8 @@ class CookieJWTAuthentication(JWTAuthentication):
                     raw_access_token = match.group(1)
                     raw_refresh_token = match.group(2)
 
-            print(f"Access token from cookie: {raw_access_token}")
-            print(f"Refresh token from cookie: {raw_refresh_token}")
         else:
             raw_access_token = self.get_raw_token(header)
-            print(f"Access token from header: {raw_access_token}")
 
         if raw_access_token is None or raw_refresh_token is None or raw_refresh_token == "" or raw_access_token == "":
             return None

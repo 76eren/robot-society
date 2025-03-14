@@ -1,3 +1,6 @@
+import pytz
+from datetime import datetime, tzinfo
+
 from django.conf import settings
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -18,11 +21,9 @@ def create_user(request):
         surname = serializer.validated_data.get('surname')
         password = request.data.get('password')
 
-        # Check if user already exists
         if User.objects.filter(username=username).exists():
             return Response({"error": "User already exists"}, status=status.HTTP_409_CONFLICT)
 
-        # Create user with hashed password
         user = User.objects.create_user(username=username, name=name, surname=surname, password=password)
 
         return Response({"message": "User created successfully"}, status=status.HTTP_201_CREATED)
@@ -46,9 +47,11 @@ def login_user(request):
     if user is None:
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
-    # Check password manually using check_password()
     if not user.check_password(password):
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    user.last_login = datetime.now(tz=pytz.UTC)
+    user.save()
 
     refresh = RefreshToken.for_user(user)
     access_token = str(refresh.access_token)
@@ -56,7 +59,6 @@ def login_user(request):
 
     response = Response({"message": "Login successful"})
 
-    # Store both tokens in one cookie
     combined_token = f"access={access_token}; refresh={refresh_token}"
 
     response.set_cookie(
