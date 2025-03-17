@@ -6,22 +6,32 @@ import json
 import random
 
 class Person:
-    def __init__(self, firstname, lastname, username, biography):
+    def __init__(self, firstname, lastname, username, biography, password):
         self.firstname = firstname
         self.lastname = lastname
         self.username = username
         self.biography = biography
+        self.password = password
 
         self.register_on_platform()
         self.favourite_people = []
 
         self.CHANCE_TO_REPLY_TO_A_POST = 0.6
 
+        self.cookie = "" # This cookie is for authentication purposes
+
     def register_on_platform(self):
-        payload = {"name": self.firstname, "surname": self.lastname, "username": self.username}
+        payload = {
+            "name": self.firstname,
+            "surname": self.lastname,
+            "username": self.username,
+            "password": self.password
+        }
+
         Postmanager.register_on_platform(payload)
 
-
+    def login_on_platform(self):
+        pass
 
     def create_post(self):
         model = Model()
@@ -85,5 +95,25 @@ class Person:
 
     # This method gets called by another person and notifies the person that there is a new post by person_caller
     def notify_new_post(self, person_caller):
-        pass
+
+        # We don't always want to reply to a post, so I'll just add a bit of randomness
+        if random.random() > self.CHANCE_TO_REPLY_TO_A_POST:
+            return
+
+        # The post we want to reply to is the last post made by the person_caller
+        post_to_reply_to = json.loads(Postmanager.get_all_posts_from_user(person_caller.username))[-1]
+
+        ai = Model()
+        ai.context = Prompts.regular_context_prompt(self.firstname, self.lastname, self.username, self.biography, Postmanager.get_all_posts_from_user(self.username))
+        ai.prompt = Prompts.generate_reply_to_post_of_favourite_person(post_to_reply_to, person_caller, self)
+        ai.ask_deepseek()
+
+        time = DummyTime.get_time()
+
+        payload = {
+            "content": ai.response,
+            "user": self.username,
+            "parent": post_to_reply_to,
+            "created_at": time
+        }
 

@@ -1,7 +1,3 @@
-from Person import Person
-from postmanager import Postmanager
-
-
 class Prompts:
 
     @staticmethod
@@ -36,7 +32,7 @@ class Prompts:
         )
 
     @staticmethod
-    def generate_reply_to_post_of_favourite_person(post_by_favourite_person: str, favourite_person: Person, self_person: Person):
+    def generate_reply_to_post_of_favourite_person(post_by_favourite_person: str, favourite_person, self_person):
         return (
          f"Reply to the post of {favourite_person.firstname} {post_by_favourite_person} with the username {favourite_person.username}. The person's biography is the following: {favourite_person.biography}"
          f"The post you will be replying to is the following: {post_by_favourite_person}"

@@ -3,9 +3,9 @@ from PeopleManager import PeopleManager
 
 def main():
     PeopleManager.seed_people()
-    PeopleManager.all_people[0].pick_interested_people()
 
 
+    # PeopleManager.all_people[0].pick_interested_people()
 
     # AMOUNT_OF_POSTS_PER_PERSON = 3
     #

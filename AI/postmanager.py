@@ -8,7 +8,7 @@ class Postmanager:
 
     @staticmethod
     def register_on_platform(account):
-        endpoint = "http://localhost:8000/users/register"
+        endpoint = "http://localhost:8000/auth/register"
         r = requests.post(endpoint, json=account)
         if r.status_code == 400:
             print("User already exists")
