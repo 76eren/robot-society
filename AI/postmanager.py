@@ -1,4 +1,6 @@
 import requests
+from requests.cookies import RequestsCookieJar
+
 
 class Postmanager:
     @staticmethod
@@ -20,3 +22,12 @@ class Postmanager:
         if r.status_code == 400:
             print("Post creation failed")
 
+    @staticmethod
+    def login_on_platform(payload) -> RequestsCookieJar:
+        # Returns the cookie in the form of a string
+        endpoint = "http://localhost:8000/auth/login"
+        r = requests.post(endpoint, json=payload)
+        if r.status_code == 400:
+            print("Login failed")
+
+        return r.cookies

@@ -12,13 +12,13 @@ class Person:
         self.username = username
         self.biography = biography
         self.password = password
+        self.favourite_people = []
+        self.CHANCE_TO_REPLY_TO_A_POST = 0.6
+        self.cookie = "" # This cookie is for authentication purposes
+
 
         self.register_on_platform()
-        self.favourite_people = []
-
-        self.CHANCE_TO_REPLY_TO_A_POST = 0.6
-
-        self.cookie = "" # This cookie is for authentication purposes
+        self.login_on_platform()
 
     def register_on_platform(self):
         payload = {
@@ -31,7 +31,12 @@ class Person:
         Postmanager.register_on_platform(payload)
 
     def login_on_platform(self):
-        pass
+        payload = {
+            "username": self.username,
+            "password": self.password
+        }
+
+        self.cookie = Postmanager.login_on_platform(payload)
 
     def create_post(self):
         model = Model()
