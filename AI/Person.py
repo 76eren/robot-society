@@ -1,3 +1,5 @@
+import os
+
 from AI import Model
 import DummyTime
 from models.prompts import Prompts
@@ -15,10 +17,6 @@ class Person:
         self.favourite_people = []
         self.CHANCE_TO_REPLY_TO_A_POST = 0.6
         self.cookie = "" # This cookie is for authentication purposes
-
-
-        self.register_on_platform()
-        self.login_on_platform()
 
     def register_on_platform(self):
         payload = {
@@ -56,10 +54,13 @@ class Person:
             "content": model.response,
             "user": self.username,
             "parent": None,
-            "created_at": time
+
+            # Only AI can set a custom time for the post
+            "created_at": time,
+            "password_for_created_at" : os.getenv("AI_POST_PASSWORD")
         }
 
-        Postmanager.create_post(payload)
+        Postmanager.create_post(payload, self.cookie)
 
         # Now we need to notify all people that have this person as a favourite person
         self.notify_all_people_subscribed_to_current_person()

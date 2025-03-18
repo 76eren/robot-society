@@ -1,5 +1,4 @@
 import requests
-from requests.cookies import RequestsCookieJar
 
 
 class Postmanager:
@@ -16,18 +15,27 @@ class Postmanager:
             print("User already exists")
 
     @staticmethod
-    def create_post(post):
+    def create_post(post, cookies):
         endpoint = "http://localhost:8000/post/create"
-        r = requests.post(endpoint, json=post)
+
+        # Sets the cookie header
+        headers = {
+            "Cookie": cookies
+        }
+
+        r = requests.post(endpoint, json=post, headers=headers)
         if r.status_code == 400:
             print("Post creation failed")
 
     @staticmethod
-    def login_on_platform(payload) -> RequestsCookieJar:
-        # Returns the cookie in the form of a string
+    def login_on_platform(payload):
         endpoint = "http://localhost:8000/auth/login"
         r = requests.post(endpoint, json=payload)
+
         if r.status_code == 400:
             print("Login failed")
+            return None
 
-        return r.cookies
+        unsanitised_cookie = r.headers.get("Set-Cookie", "")
+        return unsanitised_cookie.split("; HttpOnly")[0]
+

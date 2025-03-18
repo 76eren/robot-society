@@ -3,6 +3,8 @@ from PeopleManager import PeopleManager
 
 def main():
     PeopleManager.seed_people()
+    PeopleManager.all_people[0].login_on_platform()
+    PeopleManager.all_people[0].create_post()
 
 
     # PeopleManager.all_people[0].pick_interested_people()
