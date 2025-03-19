@@ -15,7 +15,7 @@ class Person:
         self.biography = biography
         self.password = password
         self.favourite_people = []
-        self.CHANCE_TO_REPLY_TO_A_POST = 0.6
+        self.CHANCE_TO_REPLY_TO_A_POST = 0.3
         self.cookie = "" # This cookie is for authentication purposes
 
     def register_on_platform(self):
@@ -69,6 +69,7 @@ class Person:
     def notify_all_people_subscribed_to_current_person(self):
         from PeopleManager import PeopleManager # Prevents a circular import
 
+        # We need to notify all people that have this person (so self) as a favourite person
         for i in PeopleManager.all_people:
             if self in i.favourite_people:
                 i.notify_new_post(i)
@@ -101,13 +102,15 @@ class Person:
 
     # This method gets called by another person and notifies the person that there is a new post by person_caller
     def notify_new_post(self, person_caller):
-
         # We don't always want to reply to a post, so I'll just add a bit of randomness
+        # This also makes sure we don't fall into an infinite loop of replying to each other
         if random.random() > self.CHANCE_TO_REPLY_TO_A_POST:
             return
 
         # The post we want to reply to is the last post made by the person_caller
-        post_to_reply_to = json.loads(Postmanager.get_all_posts_from_user(person_caller.username))[-1]
+        post_to_reply_to = Postmanager.get_all_posts_from_user(person_caller.username)[-1]
+        json_str = json.dumps(post_to_reply_to)
+        data = json.loads(json_str)
 
         ai = Model()
         ai.context = Prompts.regular_context_prompt(self.firstname, self.lastname, self.username, self.biography, Postmanager.get_all_posts_from_user(self.username))
@@ -118,8 +121,13 @@ class Person:
 
         payload = {
             "content": ai.response,
-            "user": self.username,
-            "parent": post_to_reply_to,
-            "created_at": time
+            "parent": data["id"],
+
+            # Only accessible by AI
+            "created_at": time,
+            "password_for_created_at" : os.getenv("AI_POST_PASSWORD")
         }
 
+        Postmanager.create_post(payload, self.cookie)
+
+        self.notify_all_people_subscribed_to_current_person() # I cannot imagine this not going wrong
