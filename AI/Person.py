@@ -1,3 +1,5 @@
+import os
+
 from AI import Model
 import DummyTime
 from models.prompts import Prompts
@@ -6,22 +8,33 @@ import json
 import random
 
 class Person:
-    def __init__(self, firstname, lastname, username, biography):
+    def __init__(self, firstname, lastname, username, biography, password):
         self.firstname = firstname
         self.lastname = lastname
         self.username = username
         self.biography = biography
-
-        self.register_on_platform()
+        self.password = password
         self.favourite_people = []
-
-        self.CHANCE_TO_REPLY_TO_A_POST = 0.6
+        self.CHANCE_TO_REPLY_TO_A_POST = 0.3
+        self.cookie = "" # This cookie is for authentication purposes
 
     def register_on_platform(self):
-        payload = {"name": self.firstname, "surname": self.lastname, "username": self.username}
+        payload = {
+            "name": self.firstname,
+            "surname": self.lastname,
+            "username": self.username,
+            "password": self.password
+        }
+
         Postmanager.register_on_platform(payload)
 
+    def login_on_platform(self):
+        payload = {
+            "username": self.username,
+            "password": self.password
+        }
 
+        self.cookie = Postmanager.login_on_platform(payload)
 
     def create_post(self):
         model = Model()
@@ -41,10 +54,13 @@ class Person:
             "content": model.response,
             "user": self.username,
             "parent": None,
-            "created_at": time
+
+            # Only AI can set a custom time for the post
+            "created_at": time,
+            "password_for_created_at" : os.getenv("AI_POST_PASSWORD")
         }
 
-        Postmanager.create_post(payload)
+        Postmanager.create_post(payload, self.cookie)
 
         # Now we need to notify all people that have this person as a favourite person
         self.notify_all_people_subscribed_to_current_person()
@@ -53,6 +69,7 @@ class Person:
     def notify_all_people_subscribed_to_current_person(self):
         from PeopleManager import PeopleManager # Prevents a circular import
 
+        # We need to notify all people that have this person (so self) as a favourite person
         for i in PeopleManager.all_people:
             if self in i.favourite_people:
                 i.notify_new_post(i)
@@ -85,5 +102,32 @@ class Person:
 
     # This method gets called by another person and notifies the person that there is a new post by person_caller
     def notify_new_post(self, person_caller):
-        pass
+        # We don't always want to reply to a post, so I'll just add a bit of randomness
+        # This also makes sure we don't fall into an infinite loop of replying to each other
+        if random.random() > self.CHANCE_TO_REPLY_TO_A_POST:
+            return
 
+        # The post we want to reply to is the last post made by the person_caller
+        post_to_reply_to = Postmanager.get_all_posts_from_user(person_caller.username)[-1]
+        json_str = json.dumps(post_to_reply_to)
+        data = json.loads(json_str)
+
+        ai = Model()
+        ai.context = Prompts.regular_context_prompt(self.firstname, self.lastname, self.username, self.biography, Postmanager.get_all_posts_from_user(self.username))
+        ai.prompt = Prompts.generate_reply_to_post_of_favourite_person(post_to_reply_to, person_caller, self)
+        ai.ask_deepseek()
+
+        time = DummyTime.get_time()
+
+        payload = {
+            "content": ai.response,
+            "parent": data["id"],
+
+            # Only accessible by AI
+            "created_at": time,
+            "password_for_created_at" : os.getenv("AI_POST_PASSWORD")
+        }
+
+        Postmanager.create_post(payload, self.cookie)
+
+        self.notify_all_people_subscribed_to_current_person() # I cannot imagine this not going wrong
